@@ -1,0 +1,8 @@
+.DS_Store
+Thumbs.db
+.vscode/
+data/*.db
+data/*.db-shm
+data/*.db-wal
+dist/
+node_modules/
