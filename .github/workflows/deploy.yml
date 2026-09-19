@@ -1,4 +1,4 @@
-name: Deploy MaterialOS to GitHub Pages
+name: Deploy ReBuild to GitHub Pages
 
 on:
   push:

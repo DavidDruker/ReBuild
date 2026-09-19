@@ -1,123 +1,53 @@
-# ReBuild
-<<<<<<< HEAD
+# ReBuild PoC
 
-ReBuild is a hackathon-ready B2B web application for matching surplus construction materials with upcoming project demand before reusable inventory becomes waste.
+The existing ReBuild web app, reduced to the core construction-material exchange workflow. The original sidebar, top search bar, typography, green palette, card layout, and photographs are retained.
 
-## What it demonstrates
+## Run
 
-- A searchable marketplace for documented surplus materials
-- Separate supplier and requester workflows
-- Compatibility scoring based on specification, timing, distance, and quantity
-- Circular logistics using available return-trip capacity
-- Financial and environmental impact reporting
-- Hybrid specification search using edit distance, semantic tokens, and exact attributes
-- Stripe-style simulated checkout with receipts stored in SQLite
-- Responsive desktop and mobile layouts
+Requires Node.js 22.12+.
 
-## Tech stack
-
-- React
-- Vite
-- Lucide React
-- Express REST API
-- SQLite database
-- Responsive CSS
-
-## Run locally
-
-```bash
+```sh
 npm install
-npm run dev:all
+npm run dev
 ```
 
-Open the local URL printed by Vite.
+For the production preview:
 
-The web app runs on `http://127.0.0.1:5173` and proxies `/api` requests to the API on `http://127.0.0.1:3001`.
-
-To test on a phone, connect the phone and computer to the same Wi-Fi network, then open `http://YOUR_COMPUTER_IP:5173`. Vite accepts LAN connections; API requests continue through the same frontend origin and development proxy.
-
-## How inventory data is created
-
-The database is initialized automatically on the first API start. Six demo listings are inserted only when the listings table is empty. New production-style data enters through the **List supply** and **Post demand** forms, which call the REST API and persist records to `data/rebuild.db`.
-
-Future import paths can use the same API:
-
-- Contractor form submissions
-- CSV or ERP inventory imports
-- BIM quantity exports
-- AI-assisted photo classification followed by human review
-- Deconstruction audits and material passports
-
-## API
-
-| Method | Endpoint | Purpose |
-| --- | --- | --- |
-| `GET` | `/api/health` | Check API and database availability |
-| `GET` | `/api/listings` | Return published surplus inventory |
-| `POST` | `/api/listings` | Create a supply listing |
-| `GET` | `/api/listings/:id` | Return a material passport |
-| `GET` | `/api/demands` | Return material requirements |
-| `POST` | `/api/demands` | Create a demand record |
-| `POST` | `/api/checkout/simulate` | Create a simulated payment and order |
-| `GET` | `/api/orders` | Return simulated orders |
-| `GET` | `/api/summary` | Return aggregate marketplace totals |
-
-### Compatibility search
-
-`GET /api/listings` accepts `q`, `type`, `model`, `dimensions`, `material`, and `buildingType`. Results are ranked using:
-
-- 30% normalized Levenshtein similarity for titles and model numbers
-- 30% local semantic token similarity with construction synonym groups
-- 40% structured model, dimensions, material, and building-use compatibility
-
-This is a transparent local demo model, not a production embedding service. The API returns the total score and all three component scores for every result.
-
-### Payment simulation
-
-The checkout imitates a Stripe payment flow but never contacts Stripe and never charges a card. Use `4242 4242 4242 4242` for success or `4000 0000 0000 0002` to simulate a decline. Only the final four digits are stored.
-
-## Deploy to GitHub Pages
-
-1. Create a GitHub repository and add these files to its root.
-2. Push the repository to the `main` branch.
-3. Open **Settings → Pages** and select **GitHub Actions** as the source.
-4. The included workflow builds and deploys the site automatically.
-
-## Demo flow
-
-1. Search for `FD90-OAK-90O` to demonstrate typo-tolerant model matching.
-2. Add dimensions, material, and building type in **Specification filters**.
-3. Open a material passport and complete a simulated checkout.
-4. Open **Supply** and publish a database-backed surplus listing.
-5. Open **Demand** and publish a material requirement.
-6. Export the impact inventory as CSV.
-
-## Project structure
-
-```text
-rebuild/
-├── assets/
-├── server/
-│   ├── database.js
-│   └── index.js
-├── src/
-│   ├── main.jsx
-│   └── styles.css
-├── .github/workflows/deploy.yml
-├── index.html
-├── package.json
-├── vite.config.js
-├── LICENSE
-└── README.md
+```sh
+npm run build
+npm run preview
 ```
 
-## Product direction
+The app runs in the browser with local demo persistence. No API server, account setup, or payment processor is needed. Changes are specific to the current browser and origin, and do not sync between devices or tabs. Existing database files are preserved but unused.
 
-The prototype focuses on pre-waste matching: coordinating future material availability, future project demand, and transport capacity before disposal occurs. A production implementation would add authentication, a database, third-party material verification, BIM integrations, and audited life-cycle assessment data.
+## PoC scope
 
-## License
+- **Marketplace:** browse and search the original 30 material listings, use specification filters, and view your company's inventory.
+- **List material:** publish surplus through the existing form pattern. No prescribed product or demonstration script is required.
+- **Request material:** choose a quantity and pickup date. On your own listings, record an incoming request from another company.
+- **Activity:** accept requests, mark materials ready for pickup, complete handoffs, or cancel before completion. All actions use the same workspace; there are no seller/buyer views.
+- **Summary strip:** actual demo totals replace static claims. Only completed handoffs contribute to value and estimated material diversion.
+- **Reset demo:** restores the original material catalog and clears this browser's created listings, requests, and totals after confirmation.
 
-MIT
-=======
-ReBuild is a B2B marketplace that helps construction companies sell and reuse surplus materials before they become waste. Contractors can list excess inventory, find nearby buyers, complete transfers, recover value, and measure the environmental impact of every reuse transaction.
->>>>>>> a3a0bab951d52addfe55835da0f6f8302ec29152
+Removed from the interface: separate supply/demand pages, smart-match dashboard, logistics mockups, simulated card checkout, placeholder notifications, and settings. The page structure and visual design remain those of the original app.
+
+## Demo data and impact
+
+The original catalog, including its companies, quantities, specifications, prices, and notes, is retained in `src/catalog.js`. Pickup dates are refreshed at reset. The original image files are served from `public/assets`; they are illustrative warehouse photos rather than evidence of live inventory. No company is contacted and no payment occurs.
+
+Completed value = quantity × price. Estimated material diversion = quantity × kg-per-unit assumption. The assumptions and reused quantities are visible beneath the summary strip. These are simulated estimates, not verified environmental outcomes.
+
+## Offline use
+
+The loaded page can complete transactions without a server connection. The production build also prepares an offline cache. A fresh offline reload produced a blank page in the embedded test browser, so keep the loaded tab open for offline demonstrations and verify cold reloads separately on the intended device. Service workers require HTTPS or localhost.
+
+## Validation
+
+```sh
+npm test
+npm run build
+```
+
+See `VERIFICATION.md` for browser checks and known limitations. `POC_PLAN.md` records the current scope. The existing GitHub Pages workflow serves the static production build; no deployment was performed.
+
+MIT license.
