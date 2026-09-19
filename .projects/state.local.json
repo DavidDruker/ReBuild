@@ -1,0 +1,49 @@
+{
+  "version": 1,
+  "project": {
+    "catalog": "prod",
+    "initializedAt": "2026-09-19T18:58:48.564Z",
+    "merchantDisplayName": "Kai Hsuan Chang",
+    "merchantId": "acct_1UHPpKLyTXIaMdUA",
+    "projectId": "project_61VQrQe6MyhcCgj3k16VQnmg7uA8EldLK7ivz97rsS9Y",
+    "projectName": "ReBuild"
+  },
+  "providers": {
+    "vercel": {
+      "accountRequestId": "facctrq_61VQrWShQQRumAK3R16VQnmg7uA8EldLK7ivz97rsMki",
+      "configuration": {},
+      "linkedAt": "2026-09-19T19:04:51.634Z",
+      "providerId": "prvdr_61ULUAr4zlQgZkvXY5LsG",
+      "providerName": "Vercel",
+      "redirectUrl": null,
+      "requestedAt": "2026-09-19T19:04:51.633Z",
+      "status": "complete"
+    }
+  },
+  "resources": {
+    "vercel-plan": {
+      "configuration": {},
+      "createdAt": "2026-09-19T19:05:01.031Z",
+      "lastRevealedAt": "2026-09-19T19:05:01.211Z",
+      "lastStatus": "complete",
+      "name": "vercel-plan",
+      "providerId": "prvdr_61ULUAr4zlQgZkvXY5LsG",
+      "providerName": "Vercel",
+      "resourceId": "fres_61VQrWeRh3drZ933P16VQnmg7uA8EldLK7ivz97rsJaS",
+      "serviceId": "hobby"
+    },
+    "web": {
+      "configuration": {
+        "name": "ReBuild"
+      },
+      "createdAt": "2026-09-19T19:05:17.197Z",
+      "lastRevealedAt": "2026-09-19T19:05:17.388Z",
+      "lastStatus": "complete",
+      "name": "web",
+      "providerId": "prvdr_61ULUAr4zlQgZkvXY5LsG",
+      "providerName": "Vercel",
+      "resourceId": "fres_61VQrWujRTELh34DW16VQnmg7uA8EldLK7ivz97rsKYi",
+      "serviceId": "project"
+    }
+  }
+}
