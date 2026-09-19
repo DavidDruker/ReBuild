@@ -1,4 +1,5 @@
 # ReBuild
+<<<<<<< HEAD
 
 ReBuild is a hackathon-ready B2B web application for matching surplus construction materials with upcoming project demand before reusable inventory becomes waste.
 
@@ -117,3 +118,6 @@ The prototype focuses on pre-waste matching: coordinating future material availa
 ## License
 
 MIT
+=======
+ReBuild is a B2B marketplace that helps construction companies sell and reuse surplus materials before they become waste. Contractors can list excess inventory, find nearby buyers, complete transfers, recover value, and measure the environmental impact of every reuse transaction.
+>>>>>>> a3a0bab951d52addfe55835da0f6f8302ec29152
