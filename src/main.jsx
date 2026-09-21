@@ -17,6 +17,7 @@ import {
   X,
 } from "lucide-react";
 import { api, storageNotice } from "./store.js";
+import { assessVideo } from "./videoAssessment.js";
 import {
   categories,
   dateOffset,
@@ -48,10 +49,53 @@ const actionLabels = {
   accepted: "Accept request",
 };
 const initialFilters = { type: "" };
+// [id, icon, sidebar label, bottom-tab label]
+const navItems = [
+  ["marketplace", LayoutGrid, "Marketplace", "Market"],
+  ["mine", Package, "My listings", "Listings"],
+  ["listing", PackagePlus, "List material", "List"],
+  ["activity", ClipboardList, "Activity", "Activity"],
+];
 
-function Sidebar({ view, navigate, open, close, reset, listMaterial }) {
+function Sidebar({ view, navigate, open, close, reset, listMaterial, menuRef }) {
+  const panel = useRef(null);
+  const closeRef = useRef(null);
+  const wasOpen = useRef(false);
+  // The drawer behaves as a modal layer on narrow screens: move focus into it
+  // on open, keep Tab inside it, and hand focus back to its trigger on close.
+  useEffect(() => {
+    if (open) closeRef.current?.focus();
+    else if (wasOpen.current) menuRef?.current?.focus();
+    wasOpen.current = open;
+  }, [open, menuRef]);
+  useEffect(() => {
+    if (!open) return;
+    const trap = (event) => {
+      if (event.key !== "Tab") return;
+      const focusable = panel.current?.querySelectorAll(
+        'a[href], button:not([disabled]), input, select, textarea, [tabindex]:not([tabindex="-1"])',
+      );
+      if (!focusable?.length) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+    document.addEventListener("keydown", trap);
+    return () => document.removeEventListener("keydown", trap);
+  }, [open]);
   return (
-    <aside id="sidebar" className={`sidebar ${open ? "open" : ""}`}>
+    <aside
+      id="sidebar"
+      ref={panel}
+      className={`sidebar ${open ? "open" : ""}`}
+      aria-label="Workspace navigation"
+    >
       <a
         className="brand"
         href="#"
@@ -67,17 +111,12 @@ function Sidebar({ view, navigate, open, close, reset, listMaterial }) {
           Re<span>Build</span>
         </span>
       </a>
-      <button className="sidebar-close nav-item" onClick={close}>
+      <button ref={closeRef} className="sidebar-close nav-item" onClick={close}>
         <X />
         Close menu
       </button>
       <nav className="primary-nav" aria-label="Main navigation">
-        {[
-          ["marketplace", LayoutGrid, "Marketplace"],
-          ["mine", Package, "My listings"],
-          ["listing", PackagePlus, "List material"],
-          ["activity", ClipboardList, "Activity"],
-        ].map(([id, Icon, label]) => (
+        {navItems.map(([id, Icon, label]) => (
           <button
             key={id}
             className={`nav-item ${view === id ? "active" : ""}`}
@@ -105,6 +144,28 @@ function Sidebar({ view, navigate, open, close, reset, listMaterial }) {
     </aside>
   );
 }
+// Phone-sized viewports get a thumb-reachable tab bar instead of relying on
+// the drawer for every move between the four destinations.
+function BottomNav({ view, navigate, listMaterial }) {
+  return (
+    <nav className="bottom-nav" aria-label="Primary">
+      <div className="bottom-nav-inner">
+        {navItems.map(([id, Icon, label, short]) => (
+          <button
+            key={id}
+            className={`bottom-nav-item ${view === id ? "active" : ""}`}
+            aria-current={view === id ? "page" : undefined}
+            aria-label={label}
+            onClick={() => (id === "listing" ? listMaterial() : navigate(id))}
+          >
+            <Icon />
+            <span aria-hidden="true">{short}</span>
+          </button>
+        ))}
+      </div>
+    </nav>
+  );
+}
 function Topbar({
   query,
   setQuery,
@@ -114,6 +175,7 @@ function Topbar({
   setFilters,
   advanced,
   setAdvanced,
+  menuRef,
 }) {
   const searchRef = useRef(null);
   const filterRef = useRef(null);
@@ -154,6 +216,7 @@ function Topbar({
   return (
     <header className="topbar">
       <button
+        ref={menuRef}
         className="icon-button menu-button"
         aria-label="Open navigation"
         aria-expanded={menu}
@@ -393,7 +456,54 @@ function ProductDetails({ item }) {
       <p>
         {item.notes} Weight: {item.weightKg} kg per {item.unit}.
       </p>
+      {item.assessment && <AssessmentSummary result={item.assessment} />}
     </div>
+  );
+}
+function AssessmentSummary({ result }) {
+  const matchLabels = {
+    consistent: "Appears consistent",
+    mismatch: "Possible listing mismatch",
+    unclear: "Could not assess match",
+  };
+  const conditionLabels = {
+    no_visible_issue: "No visible issue found in sampled frames",
+    visible_issue: "Visible issue reported",
+    unclear: "Visible condition unclear",
+  };
+  const checkLabels = {
+    category: "Category",
+    appearance: "Appearance",
+    material: "Material",
+    model: "Model",
+  };
+  return (
+    <section className="video-assessment" aria-label="Advisory video assessment">
+      <strong>Video assessment · advisory</strong>
+      <p>
+        <b>Listing match:</b> {matchLabels[result.matchStatus] || matchLabels.unclear}
+        {Number.isInteger(result.matchScore) &&
+          ` · demo match score ${result.matchScore}/100 (${result.coverage}% of applicable checks assessed)`}
+      </p>
+      <p>
+        <b>Visible condition:</b> {conditionLabels[result.condition?.status] || conditionLabels.unclear}
+        {result.condition?.observation && ` — ${result.condition.observation}`}
+        {Number.isInteger(result.condition?.timeSeconds) && ` (${result.condition.timeSeconds}s)`}
+      </p>
+      {Array.isArray(result.checks) && result.checks.length > 0 && (
+        <ul>
+          {result.checks.map((check, index) => (
+            <li key={`${check.field}-${index}`}>
+              <b>{checkLabels[check.field] || check.field}:</b> {check.status} — {check.observation}
+              {Number.isInteger(check.timeSeconds) && ` (${check.timeSeconds}s)`}
+            </li>
+          ))}
+        </ul>
+      )}
+      <small>
+        Based only on sampled frames. This is not proof of authenticity, function, safety ratings, or hidden condition.
+      </small>
+    </section>
   );
 }
 function RequestModal({ item, close, complete, viewActivity }) {
@@ -608,9 +718,43 @@ function ListingModal({ close, published }) {
   const [busy, setBusy] = useState(false),
     [error, setError] = useState(""),
     [available, setAvailable] = useState(localDate());
+  const [video, setVideo] = useState(null),
+    [analyzing, setAnalyzing] = useState(false),
+    [analysisError, setAnalysisError] = useState(""),
+    [assessment, setAssessment] = useState(null);
+  const formRef = useRef(null);
+  const analysisRevision = useRef(0);
+  const analyze = async () => {
+    if (!video) {
+      setAnalysisError("Choose a product video first.");
+      return;
+    }
+    if (video.size > 50 * 1024 * 1024) {
+      setAnalysisError("Choose a video smaller than 50 MB.");
+      return;
+    }
+    const values = Object.fromEntries(new FormData(formRef.current));
+    if (!values.title?.trim()) {
+      setAnalysisError("Enter a listing title before analyzing the video.");
+      return;
+    }
+    setAnalyzing(true);
+    setAnalysisError("");
+    setAssessment(null);
+    const revision = ++analysisRevision.current;
+    try {
+      const result = await assessVideo(video, values);
+      if (revision === analysisRevision.current) setAssessment(result);
+    } catch (problem) {
+      if (revision === analysisRevision.current) setAnalysisError(problem.message);
+    } finally {
+      setAnalyzing(false);
+    }
+  };
   const submit = async (event) => {
     event.preventDefault();
     const values = Object.fromEntries(new FormData(event.currentTarget));
+    if (assessment) values.assessment = assessment;
     setBusy(true);
     setError("");
     try {
@@ -626,9 +770,19 @@ function ListingModal({ close, published }) {
       title="List surplus material"
       eyebrow="New inventory · Northbuild"
       close={close}
-      busy={busy}
+      busy={busy || analyzing}
     >
-      <form onSubmit={submit}>
+      <form
+        ref={formRef}
+        onSubmit={submit}
+        onChange={(event) => {
+          if (["title", "type", "condition", "dimensions", "material", "model", "notes"].includes(event.target.name)) {
+            analysisRevision.current += 1;
+            setAssessment(null);
+            setAnalysisError("");
+          }
+        }}
+      >
         <div className="form-grid listing-form">
           <label className="full-field">
             Listing title
@@ -770,7 +924,34 @@ function ListingModal({ close, published }) {
             Description (optional)
             <textarea name="notes" rows="3" maxLength="2000" />
           </label>
+          <label className="full-field">
+            Product video (optional)
+            <input
+              type="file"
+              accept="video/mp4,video/webm,video/quicktime,.mov"
+              onChange={(event) => {
+                analysisRevision.current += 1;
+                setVideo(event.target.files?.[0] || null);
+                setAssessment(null);
+                setAnalysisError("");
+              }}
+            />
+            <small>The local server checks sampled frames from the first 30 seconds. Limit: 50 MB.</small>
+          </label>
+          <div className="full-field video-review-controls">
+            <button
+              type="button"
+              className="button secondary"
+              onClick={analyze}
+              disabled={!video || busy || analyzing}
+            >
+              {analyzing ? "Analyzing video…" : "Analyze video"}
+            </button>
+            <small>The result is advisory; you can publish without a video check.</small>
+          </div>
         </div>
+        {analysisError && <p className="form-error" role="alert">{analysisError}</p>}
+        {assessment && <div className="listing-assessment"><AssessmentSummary result={assessment} /></div>}
         {error && (
           <p className="form-error" role="alert">
             {error}
@@ -780,12 +961,12 @@ function ListingModal({ close, published }) {
           <button
             type="button"
             className="button secondary"
-            disabled={busy}
+            disabled={busy || analyzing}
             onClick={close}
           >
             Cancel
           </button>
-          <button className="button primary" disabled={busy}>
+          <button className="button primary" disabled={busy || analyzing}>
             {busy ? "Publishing…" : "Publish listing"}
             <ArrowRight />
           </button>
@@ -850,20 +1031,20 @@ function Activity({ items, refresh, notify }) {
                 item.supplier === WORKSPACE && item.status === "requested";
               return (
                 <tr key={item.id}>
-                  <td>
+                  <td data-label="Material / companies">
                     <strong>{item.title}</strong>
                     <small className="cell-note">
                       {item.supplier} → {item.company}
                     </small>
                     <small className="cell-note">{item.reference}</small>
                   </td>
-                  <td>
+                  <td data-label="Quantity / value">
                     {item.quantity.toLocaleString()} {item.unit}
                     <small className="cell-note">
                       {money(item.amount_cents / 100)} CAD
                     </small>
                   </td>
-                  <td>
+                  <td data-label="Status">
                     {!pendingMyApproval && (
                       <span className="status">
                         {item.status === "cancelled" &&
@@ -879,7 +1060,7 @@ function Activity({ items, refresh, notify }) {
                         </small>
                       )}
                   </td>
-                  <td>
+                  <td data-label="Next step">
                     {["requested", "accepted", "ready"].includes(
                       item.status,
                     ) && (
@@ -1016,6 +1197,7 @@ function App() {
     [modal, setModal] = useState(null),
     [toast, setToast] = useState("");
   const timer = useRef(null);
+  const menuRef = useRef(null);
   const refresh = () => setRevision((value) => value + 1);
   const notify = (message) => {
     setToast(message);
@@ -1030,6 +1212,25 @@ function App() {
     window.addEventListener("keydown", close);
     return () => window.removeEventListener("keydown", close);
   }, []);
+  // The drawer only exists below the 900px breakpoint in styles.css; growing
+  // past it must not leave the overlay and focus trap behind.
+  useEffect(() => {
+    const wide = window.matchMedia("(min-width: 901px)");
+    const sync = (event) => {
+      if (event.matches) setMenu(false);
+    };
+    wide.addEventListener("change", sync);
+    return () => wide.removeEventListener("change", sync);
+  }, []);
+  // Stop the page behind the drawer from scrolling under the overlay.
+  useEffect(() => {
+    if (!menu) return;
+    const overflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = overflow;
+    };
+  }, [menu]);
   const params = useMemo(
     () =>
       new URLSearchParams({
@@ -1089,6 +1290,7 @@ function App() {
   return (
     <div className="app-shell">
       <Sidebar
+        menuRef={menuRef}
         listMaterial={() => {
           setMenu(false);
           setModal({ kind: "listing" });
@@ -1125,6 +1327,7 @@ function App() {
           }}
           advanced={advanced}
           setAdvanced={setAdvanced}
+          menuRef={menuRef}
         />
         <section className="workspace">
           <PageHeading
@@ -1271,6 +1474,14 @@ function App() {
           </div>
         </Modal>
       )}
+      <BottomNav
+        view={view}
+        navigate={navigate}
+        listMaterial={() => {
+          setMenu(false);
+          setModal({ kind: "listing" });
+        }}
+      />
       <div className={`toast ${toast ? "show" : ""}`} role="status">
         <CircleCheck />
         <span>{toast}</span>

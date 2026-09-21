@@ -2,6 +2,14 @@
 
 Updated September 19, 2026, after the design-preservation correction.
 
+## Video assessment addition (September 21, 2026)
+
+- The browser form sends video and listing claims to the optional local server. Assessment failure leaves listing publication available.
+- Python unit tests cover real FFmpeg frame extraction, explicit match-score rules, contradictions in model observations, abstention on poor footage, invalid uploads, and temporary-file cleanup.
+- Live inference with the local `qwen3-vl:2b-instruct` model returned HTTP 200 for a short door clip. The matching listing completed in about 56 seconds in the initial direct test, and the final version displayed its advisory result in the phone-sized listing form.
+- A deliberately wrong porcelain-tile listing yielded observations that explicitly identified a wooden door. The model labeled those checks unclear, so normalization now marks explicit, frame-supported contradictions as mismatches. This rule has an automated test; the final prompt change was not rechecked against a wider video set.
+- CPU inference time varies: the first wrong-listing request reached the five-minute model timeout, while a shorter retry completed in about 102 seconds. The score is not calibrated and visible condition is not a safety or quality certification.
+
 ## Passed
 
 - Eight state-model tests: original catalog search, live listings, validation, remaining stock, overbooking prevention, valid handoff transitions, cancellation, completed impact, and reset.

@@ -168,6 +168,38 @@ export function createListing(state, body) {
     dimensions: text(body, "dimensions", false) || "Not specified",
     material: text(body, "material", false) || values.title,
     notes: text(body, "notes", false),
+    assessment: body.assessment &&
+      typeof body.assessment === "object" &&
+      ["consistent", "mismatch", "unclear"].includes(body.assessment.matchStatus)
+        ? {
+            matchStatus: body.assessment.matchStatus,
+            matchScore: Number.isInteger(body.assessment.matchScore)
+              ? Math.max(0, Math.min(100, body.assessment.matchScore))
+              : null,
+            coverage: Number.isInteger(body.assessment.coverage)
+              ? Math.max(0, Math.min(100, body.assessment.coverage))
+              : 0,
+            condition: {
+              status: ["no_visible_issue", "visible_issue", "unclear"].includes(body.assessment.condition?.status)
+                ? body.assessment.condition.status
+                : "unclear",
+              observation: String(body.assessment.condition?.observation || "").slice(0, 240),
+              timeSeconds: Number.isInteger(body.assessment.condition?.timeSeconds)
+                ? body.assessment.condition.timeSeconds
+                : null,
+            },
+            checks: Array.isArray(body.assessment.checks)
+              ? body.assessment.checks.slice(0, 4).map((item) => ({
+                  field: String(item.field || "").slice(0, 20),
+                  status: ["match", "mismatch", "unclear"].includes(item.status)
+                    ? item.status
+                    : "unclear",
+                  observation: String(item.observation || "").slice(0, 240),
+                  timeSeconds: Number.isInteger(item.timeSeconds) ? item.timeSeconds : null,
+                }))
+              : [],
+          }
+        : null,
     image: photoFor(values.type),
     status: "published",
   };

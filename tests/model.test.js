@@ -32,6 +32,17 @@ const request = (state, quantity = 120) =>
     pickupDate: localDate(),
   });
 const search = (state, q) => searchListings(state, new URLSearchParams({ q }));
+test("video assessment summary is saved with a new listing", () => {
+  const assessment = {
+    matchStatus: "mismatch",
+    matchScore: 62,
+    coverage: 90,
+    condition: { status: "visible_issue", observation: "Crack on edge", timeSeconds: 5 },
+    checks: [{ field: "category", status: "match", observation: "Door visible", timeSeconds: 0 }],
+  };
+  const listing = createListing(initialState(), { ...doors(), assessment }).listings.at(-1);
+  assert.deepEqual(JSON.parse(JSON.stringify(listing.assessment)), assessment);
+});
 test("partial handoff preserves remaining stock and counts impact only once", () => {
   let state = createListing(initialState(), doors());
   state = request(state);

@@ -6,6 +6,7 @@ This applies the core workflow from the earlier PoC plan to the existing web app
 - Keep one shared experience; no seller/buyer view or role switch.
 - Remove interface sections that are unnecessary for the PoC.
 - Retain the original catalog; the earlier four-product seed list and specific filmed product test are not requirements.
+- Offer an optional local video assessment while creating a listing; show the result as advisory evidence and keep publishing available.
 
 ## Preserve
 
@@ -27,6 +28,6 @@ Separate supply and demand pages, seller/buyer switching, placeholder enterprise
 
 ## Constraints
 
-This remains a local PoC, with fictional marketplace activity and browser persistence. All handoff actions are exposed in one shared Activity page. No authentication, supplier communication, payment processing, or production authorization model is implied. Completed quantities and mass assumptions drive impact estimates; no verified environmental claims are made.
+This remains a local PoC, with fictional marketplace activity and browser persistence. All handoff actions are exposed in one shared Activity page. No authentication, supplier communication, payment processing, or production authorization model is implied. Completed quantities and mass assumptions drive impact estimates; no verified environmental claims are made. Video analysis requires a locally running Ollama model and Python server; it makes no certification or verified-condition claim.
 
 The original CSS is the visual baseline. Additional styles are limited to the required activity actions, dialog accessibility, explanatory impact details, and mobile navigation behavior.

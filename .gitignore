@@ -8,6 +8,9 @@ dist/
 node_modules/
 
 .npm-cache/
+.venv/
+__pycache__/
+.local-tools/
 .claude/
 
 .vercel/
