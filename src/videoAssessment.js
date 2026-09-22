@@ -15,7 +15,9 @@ export async function assessVideo(video, listing) {
     throw new Error(
       typeof result.detail === "string"
         ? `${result.detail} You can still publish the listing.`
-        : "Video analysis failed. You can still publish the listing.",
+        : response.status === 404
+          ? "The video analysis route is unavailable here. Reload the local app on port 5173 and try again. You can still publish the listing."
+          : `Video analysis failed (HTTP ${response.status}). Check the local analysis server and try again. You can still publish the listing.`,
     );
   }
   const result = await response.json().catch(() => null);

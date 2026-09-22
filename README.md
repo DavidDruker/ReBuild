@@ -22,7 +22,7 @@ The core marketplace runs in the browser with local demo persistence. No account
 
 ## Optional local video assessment
 
-The listing form can analyze an MP4, WebM, or MOV video of up to 50 MB. The server samples up to six frames from the first 30 seconds and sends them to a locally running `qwen3-vl:2b-instruct` model. The result compares visible details with the seller's description and reports visible condition issues. It does not block publishing. The uploaded video and extracted frames are deleted after the request; only the written result is kept with a published listing in this browser.
+The listing form can analyze an MP4, WebM, or MOV video of up to 50 MB. The server samples up to six frames from the first 30 seconds (one middle frame for clips under five seconds) and sends them to a locally running `qwen3-vl:2b-instruct` model. The result compares visible details with the seller's description and reports visible condition issues. It does not block publishing. The uploaded video and extracted frames are deleted after the request; only the written result is kept with a published listing in this browser. For a useful check, film the full item and any wear from more than one angle.
 
 On Windows, install [Ollama](https://ollama.com/download/windows), then run:
 

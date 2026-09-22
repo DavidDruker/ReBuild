@@ -51,6 +51,12 @@ class AssessmentTests(unittest.TestCase):
         self.assertEqual(result["condition"]["status"], "unclear")
         self.assertIsNone(result["condition"]["timeSeconds"])
 
+    def test_no_visible_issue_is_withheld_when_item_cannot_be_identified(self):
+        raw = model_output(category="unclear", appearance="unclear", material="unclear")
+        result = normalize_result(raw, LISTING, FRAMES)
+        self.assertEqual(result["matchStatus"], "unclear")
+        self.assertEqual(result["condition"]["status"], "unclear")
+
     def test_unsupported_claims_and_malformed_model_fields_abstain(self):
         raw = model_output()
         raw["checks"][0]["frame"] = 99
@@ -72,6 +78,16 @@ class AssessmentTests(unittest.TestCase):
         self.assertEqual(result["checks"][2]["status"], "mismatch")
         self.assertIsNone(result["matchScore"])
 
+    def test_fixed_model_checks_are_normalized(self):
+        raw = model_output()
+        raw["checks"] = {
+            item["field"]: {key: value for key, value in item.items() if key != "field"}
+            for item in raw["checks"]
+        }
+        result = normalize_result(raw, LISTING, FRAMES)
+        self.assertEqual(result["matchStatus"], "consistent")
+        self.assertEqual(result["matchScore"], 100)
+
     def test_short_video_produces_real_frames(self):
         import subprocess
         with tempfile.TemporaryDirectory() as directory:
@@ -85,6 +101,18 @@ class AssessmentTests(unittest.TestCase):
             self.assertEqual([frame["timeSeconds"] for frame in frames], [0, 5])
             self.assertTrue(all(frame["path"].stat().st_size > 0 for frame in frames))
 
+    def test_very_short_video_samples_a_representative_middle_frame(self):
+        import subprocess
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory)
+            video = path / "video.mp4"
+            subprocess.run([
+                get_ffmpeg_exe(), "-f", "lavfi", "-i", "color=c=green:s=320x240:r=10",
+                "-t", "2.4", "-pix_fmt", "yuv420p", "-y", str(video),
+            ], check=True, capture_output=True)
+            frames = extract_frames(video, path)
+            self.assertEqual([frame["timeSeconds"] for frame in frames], [1])
+
     def test_ollama_request_sends_image_array_and_structured_format(self):
         with tempfile.TemporaryDirectory() as directory:
             image = Path(directory) / "frame.jpg"
@@ -97,7 +125,8 @@ class AssessmentTests(unittest.TestCase):
             self.assertIsInstance(sent["messages"][0]["content"], str)
             self.assertEqual(len(sent["messages"][0]["images"]), 1)
             self.assertIsInstance(sent["format"], dict)
-            self.assertEqual(sent["options"]["num_predict"], 512)
+            self.assertEqual(sent["format"]["properties"]["checks"]["type"], "object")
+            self.assertEqual(sent["options"]["num_predict"], 1024)
 
     def test_endpoint_handles_invalid_inputs_and_cleans_temp_files(self):
         with TestClient(app) as client:

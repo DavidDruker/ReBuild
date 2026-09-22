@@ -9,6 +9,7 @@ Updated September 19, 2026, after the design-preservation correction.
 - Live inference with the local `qwen3-vl:2b-instruct` model returned HTTP 200 for a short door clip. The matching listing completed in about 56 seconds in the initial direct test, and the final version displayed its advisory result in the phone-sized listing form.
 - A deliberately wrong porcelain-tile listing yielded observations that explicitly identified a wooden door. The model labeled those checks unclear, so normalization now marks explicit, frame-supported contradictions as mismatches. This rule has an automated test; the final prompt change was not rechecked against a wider video set.
 - CPU inference time varies: the first wrong-listing request reached the five-minute model timeout, while a shorter retry completed in about 102 seconds. The score is not calibrated and visible condition is not a safety or quality certification.
+- A 2.4-second portrait phone clip exposed a stale Vite proxy (HTTP 404) and a model response cut off by its output limit. After restarting Vite, bounding frame size, and using a fixed four-check response schema, the clip returned HTTP 200 through port 5173 in about 47 seconds. With no listing details confirmed, the result withheld both the score and a positive condition finding.
 
 ## Passed
 

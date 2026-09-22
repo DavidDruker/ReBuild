@@ -500,6 +500,9 @@ function AssessmentSummary({ result }) {
           ))}
         </ul>
       )}
+      {result.matchStatus === "unclear" && (
+        <p>For a clearer check, film the full item and any wear from more than one angle.</p>
+      )}
       <small>
         Based only on sampled frames. This is not proof of authenticity, function, safety ratings, or hidden condition.
       </small>
